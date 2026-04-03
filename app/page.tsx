@@ -139,9 +139,7 @@ export default function HomePage() {
           setExpandedJobs(payload.expandedJobs);
         }
 
-        if (payload.links && typeof payload.links === 'object') {
-          setLinks((previous) => ({ ...previous, ...payload.links }));
-        }
+        // Keep social inputs blank on load; users enter links manually each session.
       } catch {
         const savedTheme = window.localStorage.getItem('theme-mode');
 
@@ -686,13 +684,19 @@ function LinkInput({
 }) {
   return (
     <label className="space-y-1.5">
-      <span className="text-sm font-semibold text-slate-700 dark:text-slate-100">{label}</span>
+      <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+        {label}
+      </span>
       <span className="relative block">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400">
+        <span
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+          style={{ color: 'var(--text-muted)' }}
+        >
           {icon}
         </span>
         <input
           type="url"
+          autoComplete="off"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={`Enter ${label} URL`}
@@ -701,7 +705,7 @@ function LinkInput({
             borderColor: value ? 'var(--accent)' : 'var(--line)',
             color: 'var(--text-primary)',
           }}
-          className="w-full rounded-xl border px-10 py-2.5 text-sm outline-none transition placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+          className="w-full rounded-xl border px-10 py-2.5 text-sm outline-none transition placeholder:text-[color:var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
         />
       </span>
       {error ? <p className="mt-1 text-xs font-medium text-rose-300">{error}</p> : null}
