@@ -1,0 +1,274 @@
+import type { UserProfile } from './types';
+
+export const mockUserProfile: UserProfile = {
+  links: {
+    github: 'https://github.com/alexdev',
+    linkedin: 'https://linkedin.com/in/alexdev',
+    resume: 'https://alexdev.io/resume.pdf',
+    twitter: 'https://twitter.com/alexdev',
+    portfolio: 'https://alexdev.io',
+  },
+  technicalSkills: [
+    { skill: 'JavaScript', value: 85, fullMark: 100 },
+    { skill: 'React', value: 82, fullMark: 100 },
+    { skill: 'TypeScript', value: 74, fullMark: 100 },
+    { skill: 'Node.js', value: 68, fullMark: 100 },
+    { skill: 'CSS/Sass', value: 78, fullMark: 100 },
+    { skill: 'SQL/DB', value: 60, fullMark: 100 },
+    { skill: 'DevOps', value: 48, fullMark: 100 },
+    { skill: 'Cloud', value: 52, fullMark: 100 },
+  ],
+  softSkills: [
+    { skill: 'Communication', value: 87, fullMark: 100 },
+    { skill: 'Leadership', value: 72, fullMark: 100 },
+    { skill: 'Teamwork', value: 91, fullMark: 100 },
+    { skill: 'Problem Solving', value: 88, fullMark: 100 },
+    { skill: 'Creativity', value: 76, fullMark: 100 },
+    { skill: 'Adaptability', value: 83, fullMark: 100 },
+  ],
+  jobRecommendations: [
+    {
+      id: 1,
+      title: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      matchPercentage: 93,
+      salary: '$120K – $150K',
+      location: 'San Francisco, CA (Remote)',
+      type: 'Full-time',
+      skills: ['React', 'TypeScript', 'Next.js', 'GraphQL'],
+      description:
+        "Lead the development of our flagship SaaS product used by 50,000+ customers. You'll architect new features, mentor junior developers, and collaborate closely with product and design teams to deliver exceptional user experiences. We are a fast-growing startup with strong funding and a culture of engineering excellence.",
+      applyUrl: '#',
+    },
+    {
+      id: 2,
+      title: 'Full Stack Engineer',
+      company: 'StartupXYZ',
+      matchPercentage: 88,
+      salary: '$100K – $130K',
+      location: 'New York, NY (Hybrid)',
+      type: 'Full-time',
+      skills: ['React', 'Node.js', 'PostgreSQL', 'AWS'],
+      description:
+        "Join our growing team of 25 engineers to build scalable web applications serving millions of users. You'll work across the full stack, designing REST and GraphQL APIs as well as building responsive React frontends. We value clean code, testing, and continuous improvement.",
+      applyUrl: '#',
+    },
+    {
+      id: 3,
+      title: 'JavaScript Developer',
+      company: 'Digital Agency Co.',
+      matchPercentage: 85,
+      salary: '$90K – $115K',
+      location: 'Austin, TX (On-site)',
+      type: 'Full-time',
+      skills: ['JavaScript', 'React', 'CSS', 'REST APIs'],
+      description:
+        "Work on exciting client projects across fintech, healthcare, and e-commerce industries. You'll develop interactive web experiences and collaborate directly with clients on defining requirements. Excellent communication skills are a strong plus.",
+      applyUrl: '#',
+    },
+    {
+      id: 4,
+      title: 'React Native Developer',
+      company: 'MobileFirst Labs',
+      matchPercentage: 79,
+      salary: '$95K – $120K',
+      location: 'Seattle, WA (Remote)',
+      type: 'Full-time',
+      skills: ['React Native', 'JavaScript', 'TypeScript', 'Redux'],
+      description:
+        "Build cross-platform mobile applications for iOS and Android. Apply your React knowledge to the mobile world, working alongside UX designers to create polished, high-performance apps. Experience with native modules is a plus.",
+      applyUrl: '#',
+    },
+    {
+      id: 5,
+      title: 'Software Engineer II',
+      company: 'Enterprise Solutions Ltd.',
+      matchPercentage: 74,
+      salary: '$110K – $140K',
+      location: 'Chicago, IL (Hybrid)',
+      type: 'Full-time',
+      skills: ['Python', 'JavaScript', 'Docker', 'Kubernetes'],
+      description:
+        "Develop and maintain enterprise-grade software systems for Fortune 500 clients. Participate in system design discussions, write high-quality code, and contribute to CI/CD pipeline improvements. Strong problem-solving skills and attention to detail are essential.",
+      applyUrl: '#',
+    },
+  ],
+  aiSummary: {
+    overview:
+      'Based on your GitHub activity and LinkedIn profile, you are a skilled frontend-focused developer with 3–4 years of professional experience. Your strongest competency lies in the React and JavaScript ecosystems, with growing expertise in TypeScript and backend development. Your open-source contributions demonstrate collaborative coding skills and active engagement with the developer community.',
+    strengths: [
+      'Strong React & JavaScript foundations with modern hooks and patterns',
+      'Active open-source contributor with 12+ public repositories',
+      'Consistent code quality with 94% average test coverage',
+      'Modern frontend tooling expertise (Webpack, Vite, ESBuild)',
+      'Proven experience with responsive, accessible UI design',
+    ],
+    gaps: [
+      'Limited cloud infrastructure experience (AWS / GCP / Azure)',
+      'No formal DevOps or CI/CD pipeline ownership',
+      'Database design and query optimization skills need strengthening',
+      'Limited exposure to system design for large-scale distributed applications',
+    ],
+    industryRelevanceScore: 84,
+    industryInsights:
+      'The current job market heavily favors developers with React + TypeScript skills, which aligns well with your profile. Demand for full-stack capabilities is rising — companies prefer engineers who can bridge frontend and backend, making Node.js and database skills increasingly valuable. Your profile is well-positioned for mid-to-senior level frontend roles at both startups and established tech companies.',
+    topSkills: ['React', 'JavaScript', 'TypeScript', 'Next.js', 'Node.js', 'Git', 'CSS/Tailwind'],
+  },
+  learningPath: [
+    {
+      id: 1,
+      topic: 'TypeScript Advanced Patterns',
+      priority: 'high',
+      timeEstimate: '3–4 weeks',
+      explanation:
+        'Your TypeScript usage is solid but primarily covers basic typing. Advanced patterns like generic constraints, conditional types, mapped types, and utility types will elevate your code quality significantly and are commonly tested in senior-level interviews at top companies.',
+      resources: [
+        {
+          type: 'course',
+          title: "TypeScript: The Complete Developer's Guide",
+          provider: 'Udemy — Stephen Grider',
+          url: 'https://www.udemy.com/course/typescript-the-complete-developers-guide/',
+          free: false,
+        },
+        {
+          type: 'documentation',
+          title: 'TypeScript Handbook — Advanced Types',
+          provider: 'Official TypeScript Docs',
+          url: 'https://www.typescriptlang.org/docs/handbook/2/types-from-types.html',
+          free: true,
+        },
+        {
+          type: 'book',
+          title: 'Programming TypeScript',
+          provider: "O'Reilly Media — Boris Cherny",
+          url: 'https://www.oreilly.com/library/view/programming-typescript/9781492037644/',
+          free: false,
+        },
+      ],
+    },
+    {
+      id: 2,
+      topic: 'AWS Cloud Fundamentals',
+      priority: 'high',
+      timeEstimate: '6–8 weeks',
+      explanation:
+        'Cloud knowledge is now a baseline expectation at most tech companies. Your current skill gap in AWS is visible in 3 of your top 5 job matches. Starting with AWS Solutions Architect Associate will give you credibility and practical skills to deploy and scale applications independently.',
+      resources: [
+        {
+          type: 'course',
+          title: 'AWS Certified Solutions Architect — Associate',
+          provider: 'A Cloud Guru',
+          url: 'https://acloudguru.com/course/aws-certified-solutions-architect-associate',
+          free: false,
+        },
+        {
+          type: 'course',
+          title: 'AWS Free Tier — Hands-on Labs',
+          provider: 'Amazon Web Services',
+          url: 'https://aws.amazon.com/free/',
+          free: true,
+        },
+        {
+          type: 'book',
+          title: 'AWS Cookbook',
+          provider: "O'Reilly Media — John Culkin & Mike Zazon",
+          url: 'https://www.oreilly.com/library/view/aws-cookbook/9781492092599/',
+          free: false,
+        },
+      ],
+    },
+    {
+      id: 3,
+      topic: 'System Design Fundamentals',
+      priority: 'high',
+      timeEstimate: '4–6 weeks',
+      explanation:
+        'As you target senior-level positions, system design interviews become critical. Understanding distributed systems, caching, load balancing, and database design patterns will prepare you for technical interviews at top-tier companies and help you make better architectural decisions day-to-day.',
+      resources: [
+        {
+          type: 'book',
+          title: 'Designing Data-Intensive Applications',
+          provider: "O'Reilly — Martin Kleppmann",
+          url: 'https://dataintensive.net/',
+          free: false,
+        },
+        {
+          type: 'course',
+          title: 'Grokking the System Design Interview',
+          provider: 'Educative.io',
+          url: 'https://www.educative.io/courses/grokking-the-system-design-interview',
+          free: false,
+        },
+        {
+          type: 'video',
+          title: 'System Design YouTube Series',
+          provider: 'ByteByteGo — Alex Xu',
+          url: 'https://www.youtube.com/@ByteByteGo',
+          free: true,
+        },
+      ],
+    },
+    {
+      id: 4,
+      topic: 'Node.js & Backend Development',
+      priority: 'medium',
+      timeEstimate: '4–5 weeks',
+      explanation:
+        'Your frontend skills are strong, but the job market rewards full-stack capability. Deepening your Node.js knowledge with Express, authentication patterns, and REST/GraphQL API design will open the door to full-stack roles with higher compensation brackets.',
+      resources: [
+        {
+          type: 'course',
+          title: 'The Complete Node.js Developer Course',
+          provider: 'Udemy — Andrew Mead',
+          url: 'https://www.udemy.com/course/the-complete-nodejs-developer-course-2/',
+          free: false,
+        },
+        {
+          type: 'book',
+          title: 'Node.js Design Patterns',
+          provider: 'Packt Publishing — Mario Casciaro',
+          url: 'https://www.nodejsdesignpatterns.com/',
+          free: false,
+        },
+        {
+          type: 'documentation',
+          title: 'Node.js Official Guides',
+          provider: 'Node.js Foundation',
+          url: 'https://nodejs.org/en/docs/guides',
+          free: true,
+        },
+      ],
+    },
+    {
+      id: 5,
+      topic: 'Docker & CI/CD Pipelines',
+      priority: 'medium',
+      timeEstimate: '2–3 weeks',
+      explanation:
+        'Modern development workflows expect containerization knowledge. Learning Docker and setting up GitHub Actions pipelines will make you a more effective team member and is increasingly listed as a required or preferred skill even for frontend-focused roles.',
+      resources: [
+        {
+          type: 'course',
+          title: 'Docker and Kubernetes: The Complete Guide',
+          provider: 'Udemy — Stephen Grider',
+          url: 'https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/',
+          free: false,
+        },
+        {
+          type: 'documentation',
+          title: 'GitHub Actions Documentation',
+          provider: 'GitHub',
+          url: 'https://docs.github.com/en/actions',
+          free: true,
+        },
+        {
+          type: 'book',
+          title: 'Docker Deep Dive',
+          provider: 'Nigel Poulton',
+          url: 'https://www.amazon.com/Docker-Deep-Dive-Nigel-Poulton/dp/1916585256',
+          free: false,
+        },
+      ],
+    },
+  ],
+};
