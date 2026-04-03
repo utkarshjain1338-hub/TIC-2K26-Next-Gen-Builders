@@ -215,12 +215,19 @@ export default function HomePage() {
           expandedJobs,
         }),
         signal: requestController.signal,
+      }).catch((error: unknown) => {
+        // Ignore expected cancellation during rapid updates/unmount.
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+
+        console.error('Failed to save preferences', error);
       });
     }, 250);
 
     return () => {
-      requestController.abort();
       window.clearTimeout(saveTimer);
+      requestController.abort();
     };
   }, [theme, links, expandedJobs, preferencesLoaded]);
 
@@ -392,13 +399,9 @@ export default function HomePage() {
           </h2>
           <button
             type="button"
-<<<<<<< HEAD
             onClick={handleAnalyzeProfile}
             disabled={analyzing}
             className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:bg-gray-400"
-=======
-            className="rounded-xl btn-accent px-4 py-2 text-sm font-semibold"
->>>>>>> d0d4647f3ec72a9d676f1056747904a0c2d7223c
           >
             {analyzing ? 'Analyzing...' : 'Analyze Profile'}
           </button>
