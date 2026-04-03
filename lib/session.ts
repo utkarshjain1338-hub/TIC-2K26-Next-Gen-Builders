@@ -1,6 +1,6 @@
 import { getIronSession, type SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
-import type { SocialLinks } from '@/lib/types';
+import type { SocialLinks, UserProfile } from '@/lib/types';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -10,8 +10,14 @@ export interface DashboardPreferences {
   expandedJobs?: boolean;
 }
 
+export interface AnalysisSessionData {
+  signature: string;
+  profile: UserProfile;
+}
+
 interface DashboardSessionData {
   preferences?: DashboardPreferences;
+  analysis?: AnalysisSessionData;
 }
 
 const sessionPassword =

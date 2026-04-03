@@ -26,7 +26,7 @@ import {
 } from 'recharts';
 import { mockUserProfile } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
-import type { LearningResource, SocialLinks, SkillData } from '@/lib/types';
+import type { JobRecommendation, LearningPathItem, LearningResource, SocialLinks, SkillData, UserProfile } from '@/lib/types';
 
 const animationVariant = {
   hidden: { opacity: 0, y: 14 },
@@ -48,6 +48,12 @@ const priorityClass = {
 
 type ThemeMode = 'light' | 'dark';
 type ThemeTransition = 'to-light' | 'to-dark' | 'dark-moon' | null;
+
+interface Skill {
+  name: string;
+  confidence: number;
+  source: string;
+}
 
 const navSections = [
   { id: 'overview', label: 'Overview' },
@@ -73,17 +79,17 @@ export default function HomePage() {
   const [themeTransition, setThemeTransition] = useState<ThemeTransition>(null);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [extractedSkills, setExtractedSkills] = useState<Skill[]>([]);
-  const [aiSummary, setAiSummary] = useState<string>('');
-  const [aiGaps, setAiGaps] = useState<string[]>([]);
-  const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
-  const [aiTechnicalSkills, setAiTechnicalSkills] = useState<SkillData[]>([]);
-  const [aiSoftSkills, setAiSoftSkills] = useState<SkillData[]>([]);
+  const [aiSummary, setAiSummary] = useState<string>(mockUserProfile.aiSummary.overview);
+  const [aiGaps, setAiGaps] = useState<string[]>(mockUserProfile.aiSummary.gaps);
+  const [aiStrengths, setAiStrengths] = useState<string[]>(mockUserProfile.aiSummary.strengths);
+  const [aiTechnicalSkills, setAiTechnicalSkills] = useState<SkillData[]>(mockUserProfile.technicalSkills);
+  const [aiSoftSkills, setAiSoftSkills] = useState<SkillData[]>(mockUserProfile.softSkills);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
 
-  const [jobs, setJobs] = useState(mockUserProfile.jobRecommendations);
-  const [learningPath, setLearningPath] = useState(mockUserProfile.learningPath);
+  const [jobs, setJobs] = useState<JobRecommendation[]>(mockUserProfile.jobRecommendations);
+  const [learningPath, setLearningPath] = useState<LearningPathItem[]>(mockUserProfile.learningPath);
   const [industryRelevanceScore, setIndustryRelevanceScore] = useState(mockUserProfile.aiSummary.industryRelevanceScore);
   const [industryInsights, setIndustryInsights] = useState(mockUserProfile.aiSummary.industryInsights);
   const [topSkills, setTopSkills] = useState(mockUserProfile.aiSummary.topSkills);
@@ -93,15 +99,9 @@ export default function HomePage() {
     [expandedJobs, jobs],
   );
 
-  const technicalSkillsData = useMemo(
-    () => (aiTechnicalSkills.length > 0 ? aiTechnicalSkills : mockUserProfile.technicalSkills),
-    [aiTechnicalSkills],
-  );
+  const technicalSkillsData = aiTechnicalSkills;
 
-  const softSkillsData = useMemo(
-    () => (aiSoftSkills.length > 0 ? aiSoftSkills : mockUserProfile.softSkills),
-    [aiSoftSkills],
-  );
+  const softSkillsData = aiSoftSkills;
 
   const averageTechnical = useMemo(() => {
     const total = technicalSkillsData.reduce((sum, item) => sum + item.value, 0);
@@ -125,6 +125,19 @@ export default function HomePage() {
 
   const updateLink = (field: keyof SocialLinks, value: string) => {
     setLinks((prev) => ({ ...prev, [field]: value }));
+    void fetch('/api/session/analysis', { method: 'DELETE' });
+    setExtractedSkills([]);
+    setAiSummary(mockUserProfile.aiSummary.overview);
+    setAiGaps(mockUserProfile.aiSummary.gaps);
+    setAiStrengths(mockUserProfile.aiSummary.strengths);
+    setAiTechnicalSkills(mockUserProfile.technicalSkills);
+    setAiSoftSkills(mockUserProfile.softSkills);
+    setJobs(mockUserProfile.jobRecommendations);
+    setLearningPath(mockUserProfile.learningPath);
+    setIndustryRelevanceScore(mockUserProfile.aiSummary.industryRelevanceScore);
+    setIndustryInsights(mockUserProfile.aiSummary.industryInsights);
+    setTopSkills(mockUserProfile.aiSummary.topSkills);
+    setAnalysisMessage('Edit completed links, then click Analyze Profile to refresh recommendations for the new user.');
     if (!isUrlValid(value)) {
       setLinkErrors((prev) => ({ ...prev, [field]: 'Please enter a valid URL (https://...).'}));
     } else {
@@ -171,46 +184,49 @@ export default function HomePage() {
       setExtractedSkills(skills);
       setAiSummary(response.data.aiSummary || '');
       setAiGaps(response.data.aiGaps || []);
-      setAiRecommendations(response.data.aiRecommendations || []);
+      setAiStrengths(response.data.aiStrengths || []);
       setAiTechnicalSkills(aiTech);
       setAiSoftSkills(aiSoft);
 
-      setIndustryRelevanceScore(response.data.aiIndustryRelevanceScore ?? Math.round((averageTechnical + averageSoft) / 2));
-      setIndustryInsights(response.data.aiIndustryInsights || mockUserProfile.aiSummary.industryInsights);
-      setTopSkills(response.data.aiTopSkills?.length ? response.data.aiTopSkills : mockUserProfile.aiSummary.topSkills);
+      setIndustryRelevanceScore(response.data.aiIndustryRelevanceScore ?? 0);
+      setIndustryInsights(response.data.aiIndustryInsights || '');
+      setTopSkills(response.data.aiTopSkills || []);
+      setJobs(response.data.aiJobRecommendations || []);
+      setLearningPath(response.data.aiLearningPath || []);
 
-      const detectedSkillNames = new Set<string>([...aiTech, ...aiSoft].map((item) => item.skill.toLowerCase()));
+      const processedProfile: UserProfile = {
+        links,
+        technicalSkills: aiTech,
+        softSkills: aiSoft,
+        jobRecommendations: response.data.aiJobRecommendations || [],
+        aiSummary: {
+          overview: response.data.aiSummary || '',
+          strengths: response.data.aiStrengths || [],
+          gaps: response.data.aiGaps || [],
+          industryRelevanceScore: response.data.aiIndustryRelevanceScore ?? 0,
+          industryInsights: response.data.aiIndustryInsights || '',
+          topSkills: response.data.aiTopSkills || [],
+        },
+        learningPath: response.data.aiLearningPath || [],
+      };
 
-      if (detectedSkillNames.size > 0) {
-        const updatedJobs = mockUserProfile.jobRecommendations
-          .map((job) => {
-            const matchCount = job.skills.filter((skill) => detectedSkillNames.has(skill.toLowerCase())).length;
-            const matchPercentage = Math.min(100, Math.max(20, Math.round((matchCount / job.skills.length) * 100)));
-
-            return { ...job, matchPercentage };
-          })
-          .sort((a, b) => b.matchPercentage - a.matchPercentage);
-
-        setJobs(updatedJobs);
-
-        const updatedPath = mockUserProfile.learningPath.map((item) => {
-          const matchCount = item.resources.reduce((c, resource) => {
-            const text = `${resource.title} ${resource.provider ?? ''} ${resource.url} ${resource?.title ?? ''}`.toLowerCase();
-            return c + (Array.from(detectedSkillNames).some((skill) => text.includes(skill)) ? 1 : 0);
-          }, 0);
-          return {
-            ...item,
-            priority: matchCount > 0 ? 'high' : item.priority,
-          };
-        });
-
-        setLearningPath(updatedPath);
-      }
+      await fetch('/api/session/analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          analysis: {
+            signature: JSON.stringify(links),
+            profile: processedProfile,
+          },
+        }),
+      });
 
       if (skills.length > 0 || aiTech.length > 0 || aiSoft.length > 0) {
-        setAnalysisMessage(`Extracted ${skills.length} raw skills and ${aiTech.length + aiSoft.length} AI skills from your links.`);
+        setAnalysisMessage(`AI analysis complete with ${skills.length} raw skills and ${aiTech.length + aiSoft.length} AI skills from your links. Saved for this browser session.`);
       } else {
-        setAnalysisMessage('No skills were detected in the provided links yet. Try adding GitHub/LinkedIn/portfolio/dev.to links.');
+        setAnalysisMessage('AI analysis completed, but no skills were detected from the provided links. Saved for this browser session.');
       }
     } catch (err) {
       setAnalysisError('Failed to analyze profile. Please try again.');
@@ -219,12 +235,6 @@ export default function HomePage() {
       setAnalyzing(false);
     }
   };
-  interface Skill {
-  name: string;
-  confidence: number;
-  source: string;
-}
-
   useEffect(() => {
     let ignore = false;
 
@@ -254,7 +264,39 @@ export default function HomePage() {
           setExpandedJobs(payload.expandedJobs);
         }
 
-        // Keep social inputs blank on load; users enter links manually each session.
+        if (payload.links && Object.values(payload.links).some((link) => link.trim())) {
+          setLinks((prev) => ({ ...prev, ...payload.links }));
+        }
+
+          const analysisResponse = await fetch('/api/session/analysis', { cache: 'no-store' });
+          if (analysisResponse.ok) {
+            const payload = (await analysisResponse.json()) as {
+              analysis?: { profile?: UserProfile } | null;
+            };
+
+            const savedProfile = payload.analysis?.profile;
+            if (savedProfile) {
+              setLinks(savedProfile.links);
+              setExtractedSkills(
+                savedProfile.technicalSkills.map((skill) => ({
+                  name: skill.skill,
+                  confidence: skill.value / 100,
+                  source: 'Saved Analysis',
+                })),
+              );
+              setAiSummary(savedProfile.aiSummary.overview);
+              setAiGaps(savedProfile.aiSummary.gaps);
+              setAiStrengths(savedProfile.aiSummary.strengths);
+              setAiTechnicalSkills(savedProfile.technicalSkills);
+              setAiSoftSkills(savedProfile.softSkills);
+              setIndustryRelevanceScore(savedProfile.aiSummary.industryRelevanceScore);
+              setIndustryInsights(savedProfile.aiSummary.industryInsights);
+              setTopSkills(savedProfile.aiSummary.topSkills);
+              setJobs(savedProfile.jobRecommendations);
+              setLearningPath(savedProfile.learningPath);
+              setAnalysisMessage('Loaded saved analysis for this browser session.');
+            }
+          }
       } catch {
         const savedTheme = window.localStorage.getItem('theme-mode');
 
@@ -625,6 +667,11 @@ export default function HomePage() {
                 </span>
               </div>
               <p className="mb-2 text-sm text-slate-700">{job.description}</p>
+              {job.fitReason && (
+                <p className="mb-3 text-xs font-medium text-emerald-800">
+                  Why this fits: {job.fitReason}
+                </p>
+              )}
               <div className="mb-3 flex flex-wrap gap-2">
                 {job.skills.map((skill) => (
                   <span
@@ -657,13 +704,13 @@ export default function HomePage() {
             <Sparkles className="h-6 w-6 text-emerald-700" />
             AI Summary: Skills, Experience, Industry Relevance
           </h2>
-          <p className="text-sm leading-6 text-slate-700">{aiSummary || mockUserProfile.aiSummary.overview}</p>
+          <p className="text-sm leading-6 text-slate-700">{aiSummary}</p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
               <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-800">Strengths</h3>
               <ul className="space-y-2 text-sm text-slate-700">
-                {(aiRecommendations.length > 0 ? aiRecommendations : mockUserProfile.aiSummary.strengths).map((item) => (
+                {aiStrengths.map((item) => (
                   <li key={item} className="rounded-xl bg-emerald-50 px-3 py-2">
                     {item}
                   </li>
@@ -673,7 +720,7 @@ export default function HomePage() {
             <div>
               <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-700">Growth Gaps</h3>
               <ul className="space-y-2 text-sm text-slate-700">
-                {(aiGaps.length > 0 ? aiGaps : mockUserProfile.aiSummary.gaps).map((item) => (
+                {aiGaps.map((item) => (
                   <li key={item} className="rounded-xl bg-orange-50 px-3 py-2">
                     {item}
                   </li>
@@ -698,7 +745,7 @@ export default function HomePage() {
           </div>
           <p className="mt-4 text-sm leading-6 text-slate-700">{industryInsights}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {(topSkills.length > 0 ? topSkills : mockUserProfile.aiSummary.topSkills).map((skill) => (
+            {topSkills.map((skill) => (
               <span key={skill} className="rounded-full chip px-3 py-1 text-xs font-semibold text-emerald-800">
                 {skill}
               </span>

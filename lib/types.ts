@@ -24,6 +24,7 @@ export interface JobRecommendation {
   skills: string[];
   description: string;
   applyUrl: string;
+  fitReason?: string;
 }
 
 export interface AISummary {

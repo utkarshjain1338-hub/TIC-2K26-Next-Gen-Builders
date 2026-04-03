@@ -14,6 +14,7 @@ export interface AIProfileAnalysis {
   technicalSkills: AIDetectedSkill[];
   softSkills: AIDetectedSkill[];
   summary: string;
+  strengths: string[];
   gaps: string[];
   recommendations: string[];
   industryRelevanceScore: number;
@@ -47,6 +48,53 @@ function normalizeSkillName(name: string): string {
     .replace(/\bvuejs\b/i, 'Vue.js')
     .replace(/\bnextjs\b/i, 'Next.js')
     .replace(/\bnodejs\b/i, 'Node.js');
+}
+
+function extractJsonObject(output: string): Record<string, unknown> | null {
+  const trimmed = output.trim();
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const candidate = (fenceMatch?.[1] ?? trimmed).trim();
+
+  const firstBrace = candidate.indexOf('{');
+  const lastBrace = candidate.lastIndexOf('}');
+
+  if (firstBrace < 0 || lastBrace < 0 || lastBrace <= firstBrace) {
+    return null;
+  }
+
+  const jsonString = candidate.slice(firstBrace, lastBrace + 1);
+
+  try {
+    const parsed = JSON.parse(jsonString);
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function mapSkillItems(items: unknown, type: AIDetectedSkill['type']): AIDetectedSkill[] {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+
+      const skill = item as Record<string, unknown>;
+      if (typeof skill.name !== 'string' || !skill.name.trim()) return null;
+
+      const confidence = clamp(Number(skill.confidence) || 0.5, 0, 1);
+      const numericScore = Number(skill.score);
+      const score = clamp(Number.isFinite(numericScore) ? numericScore / 100 : confidence, 0, 1) * 100;
+
+      return {
+        name: normalizeSkillName(skill.name),
+        score: Math.round(score),
+        confidence,
+        type,
+        source: typeof skill.source === 'string' && skill.source.trim() ? skill.source : 'AI',
+      };
+    })
+    .filter(Boolean) as AIDetectedSkill[];
 }
 
 async function callOpenAI(prompt: string): Promise<string> {
@@ -179,55 +227,75 @@ export async function callModel(prompt: string): Promise<string> {
 }
 
 export function parseSkillsFromAI(output: string): AIDetectedSkill[] {
-  try {
-    const jsonStart = output.indexOf('{');
-    const jsonString = jsonStart >= 0 ? output.slice(jsonStart) : output;
-    const parsed = JSON.parse(jsonString);
-    if (!parsed.skills || !Array.isArray(parsed.skills)) return [];
+  const parsed = extractJsonObject(output);
+  if (!parsed) return [];
 
+  if (Array.isArray(parsed.skills)) {
     return parsed.skills
-      .map((item: any) => {
-        if (!item.name) return null;
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
 
-        const confidence = clamp(Number(item.confidence) || 0.5, 0, 1);
-        const score = clamp(Number(item.score) / 100 || confidence, 0, 1) * 100;
+        const skill = item as Record<string, unknown>;
+        if (typeof skill.name !== 'string' || !skill.name.trim()) return null;
+
+        const type = skill.type === 'soft' ? 'soft' : skill.type === 'technical' ? 'technical' : 'other';
+        const confidence = clamp(Number(skill.confidence) || 0.5, 0, 1);
+        const numericScore = Number(skill.score);
+        const score = clamp(Number.isFinite(numericScore) ? numericScore / 100 : confidence, 0, 1) * 100;
 
         return {
-          name: normalizeSkillName(String(item.name)),
+          name: normalizeSkillName(skill.name),
           score: Math.round(score),
           confidence,
-          type: item.type === 'soft' ? 'soft' : item.type === 'technical' ? 'technical' : 'other',
-          source: item.source || 'AI',
+          type,
+          source: typeof skill.source === 'string' && skill.source.trim() ? skill.source : 'AI',
         };
       })
       .filter(Boolean) as AIDetectedSkill[];
-  } catch (err) {
-    return [];
   }
+
+  return [...mapSkillItems(parsed.technicalSkills, 'technical'), ...mapSkillItems(parsed.softSkills, 'soft')];
 }
 
 export async function analyzeProfileText(rawText: string): Promise<AIProfileAnalysis> {
-  const prompt = `Extract a JSON object from this profile text. Return: technicalSkills, softSkills, summary, gaps, recommendations. Each skill has name and confidence 0-1 (and optionally score 0-100). Use this template:\n{\n  "technicalSkills": [{"name":"...","confidence":0.9,"score":85}],\n  "softSkills": [{"name":"...","confidence":0.7,"score":70}],\n  "summary":"...",\n  "gaps":[...],\n  "recommendations":[...]\n}\n\nProfile text:\n${rawText}`;
+  const prompt = `Analyze the profile text and return ONLY valid JSON with this exact shape:
+{
+  "technicalSkills": [{"name":"string","confidence":0.0,"score":0,"source":"string"}],
+  "softSkills": [{"name":"string","confidence":0.0,"score":0,"source":"string"}],
+  "summary":"string",
+  "gaps":["string"],
+  "recommendations":["string"]
+}
+
+Rules:
+- Do not wrap the response in markdown fences.
+- Do not include any extra keys or commentary.
+- confidence must be between 0 and 1.
+- score must be between 0 and 100.
+
+Profile text:
+${rawText}`;
 
   const aiResponse = await callModel(prompt);
+  const parsed = extractJsonObject(aiResponse);
   const skills = parseSkillsFromAI(aiResponse);
 
-  const technicalSkills = skills.filter((s) => s.type === 'technical');
-  const softSkills = skills.filter((s) => s.type === 'soft');
+  const technicalSkills = Array.isArray(parsed?.technicalSkills)
+    ? mapSkillItems(parsed.technicalSkills, 'technical')
+    : skills.filter((s) => s.type === 'technical');
+  const softSkills = Array.isArray(parsed?.softSkills)
+    ? mapSkillItems(parsed.softSkills, 'soft')
+    : skills.filter((s) => s.type === 'soft');
 
   let summary = '';
   let gaps: string[] = [];
   let recommendations: string[] = [];
 
-  try {
-    const jsonStart = aiResponse.indexOf('{');
-    if (jsonStart >= 0) {
-      const parsed = JSON.parse(aiResponse.slice(jsonStart));
-      summary = parsed.summary ?? '';
-      gaps = Array.isArray(parsed.gaps) ? parsed.gaps.slice(0, 6).map(String) : [];
-      recommendations = Array.isArray(parsed.recommendations) ? parsed.recommendations.slice(0, 6).map(String) : [];
-    }
-  } catch {
+  if (parsed) {
+    summary = typeof parsed.summary === 'string' ? parsed.summary : '';
+    gaps = Array.isArray(parsed.gaps) ? parsed.gaps.slice(0, 6).map(String) : [];
+    recommendations = Array.isArray(parsed.recommendations) ? parsed.recommendations.slice(0, 6).map(String) : [];
+  } else {
     summary = aiResponse.slice(0, 600);
   }
 
@@ -248,6 +316,7 @@ export async function analyzeProfileText(rawText: string): Promise<AIProfileAnal
     technicalSkills,
     softSkills,
     summary,
+    strengths: topSkills.slice(0, 5).map((skill) => `Strong signal in ${skill}`),
     gaps,
     recommendations,
     industryRelevanceScore,
