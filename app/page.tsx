@@ -145,8 +145,9 @@ export default function HomePage() {
 
         if (savedTheme === 'dark' || savedTheme === 'light') {
           setTheme(savedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          setTheme('dark');
+        } else {
+          // Default to light mode on first visit
+          setTheme('light');
         }
       } finally {
         if (!ignore) {
@@ -426,15 +427,15 @@ export default function HomePage() {
           title="Technical Skill Spider Graph"
           subtitle={`Average score ${averageTechnical}%`}
           data={mockUserProfile.technicalSkills}
-          stroke="var(--accent)"
-          fill="var(--accent)"
+          stroke="#8B5CF6"
+          fill="#8B5CF6"
         />
         <RadarPanel
           title="Experience & Soft Skills Spider Graph"
           subtitle={`Average score ${averageSoft}%`}
           data={mockUserProfile.softSkills}
-          stroke="var(--highlight)"
-          fill="var(--highlight)"
+          stroke="#F97316"
+          fill="#F97316"
         />
       </motion.section>
 
@@ -661,7 +662,14 @@ function RadarPanel({
               labelStyle={{ color: 'var(--text-secondary)', fontWeight: 600 }}
               itemStyle={{ color: 'var(--text-primary)' }}
             />
-            <Radar dataKey="value" stroke={stroke} fill={fill} fillOpacity={0.45} />
+            <Radar
+              dataKey="value"
+              stroke={stroke}
+              fill={fill}
+              fillOpacity={0.35}
+              strokeWidth={2}
+              dot={{ fill: stroke, strokeWidth: 2, r: 4 }}
+            />
           </RadarChart>
         </ResponsiveContainer>
       </div>

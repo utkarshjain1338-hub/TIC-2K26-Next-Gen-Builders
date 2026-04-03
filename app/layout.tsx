@@ -28,6 +28,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const savedTheme = localStorage.getItem('theme-mode');
+                const theme = (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'light';
+                document.documentElement.dataset.theme = theme;
+              } catch (e) {
+                document.documentElement.dataset.theme = 'light';
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${spaceGrotesk.variable} ${fraunces.variable}`}>{children}</body>
     </html>
   );
